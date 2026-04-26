@@ -32,8 +32,13 @@ jobs:
 
       - name: Sync profile + posts
         env:
+          # Cookie-based auth (recommended — bypasses LinkedIn's CHALLENGE).
+          LINKEDIN_LI_AT: ${{ secrets.LINKEDIN_LI_AT }}
+          LINKEDIN_JSESSIONID: ${{ secrets.LINKEDIN_JSESSIONID }}
+          # Fallback password auth — only used if cookies aren't set.
           LINKEDIN_EMAIL: ${{ secrets.LINKEDIN_EMAIL }}
           LINKEDIN_PASSWORD: ${{ secrets.LINKEDIN_PASSWORD }}
+          # Always required.
           LINKEDIN_PROFILE_PUBLIC_ID: ${{ secrets.LINKEDIN_PROFILE_PUBLIC_ID }}
         run: python scripts/sync_linkedin.py
 
