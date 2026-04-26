@@ -157,15 +157,50 @@ def fetch_from_linkedin() -> dict:
         from linkedin_api import Linkedin
     except ImportError:
         sys.exit("linkedin-api not installed — run: pip install linkedin-api")
+    import requests
 
-    email = os.environ.get("LINKEDIN_EMAIL")
-    password = os.environ.get("LINKEDIN_PASSWORD")
     public_id = os.environ.get("LINKEDIN_PROFILE_PUBLIC_ID")
-    if not (email and password and public_id):
-        sys.exit("Missing LINKEDIN_EMAIL / LINKEDIN_PASSWORD / LINKEDIN_PROFILE_PUBLIC_ID env vars")
+    if not public_id:
+        sys.exit("Missing LINKEDIN_PROFILE_PUBLIC_ID env var")
 
-    api = Linkedin(email, password)
-    p = api.get_profile(public_id) or {}
+    li_at = (os.environ.get("LINKEDIN_LI_AT") or "").strip()
+    jsessionid = (os.environ.get("LINKEDIN_JSESSIONID") or "").strip()
+    email = os.environ.get("LINKEDIN_EMAIL") or ""
+    password = os.environ.get("LINKEDIN_PASSWORD") or ""
+
+    if li_at and jsessionid:
+        # JSESSIONID's cookie value must be wrapped in double quotes — LinkedIn
+        # uses it as a CSRF token and rejects unquoted values. Normalize so
+        # the user can paste either form.
+        jsessionid = jsessionid.strip('"')
+        jsessionid = f'"{jsessionid}"'
+
+        jar = requests.cookies.RequestsCookieJar()
+        jar.set("li_at", li_at, domain=".linkedin.com")
+        jar.set("JSESSIONID", jsessionid, domain=".linkedin.com")
+        # email/password are required positionally but unused when cookies are
+        # provided. Pass empty strings.
+        api = Linkedin(email, password, cookies=jar)
+    elif email and password:
+        api = Linkedin(email, password)
+    else:
+        sys.exit(
+            "Missing credentials. Set either:\n"
+            "  LINKEDIN_LI_AT + LINKEDIN_JSESSIONID  (recommended — bypasses challenge), or\n"
+            "  LINKEDIN_EMAIL + LINKEDIN_PASSWORD    (fragile — usually triggers CHALLENGE)"
+        )
+
+    try:
+        p = api.get_profile(public_id) or {}
+    except Exception as exc:
+        msg = str(exc)
+        if "CHALLENGE" in msg or "401" in msg or "403" in msg:
+            sys.exit(
+                "LinkedIn rejected the session. Likely cause: cookies expired or "
+                "got invalidated. Re-grab li_at / JSESSIONID from your browser "
+                "and update the GitHub Secrets. Original error: " + msg
+            )
+        raise
 
     try:
         raw_posts = api.get_profile_posts(public_id, post_count=8) or []
