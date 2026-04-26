@@ -1,0 +1,9 @@
+{
+  "name": "tony-osman-portfolio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tony K. Osman — personal portfolio. Static React site, auto-synced from LinkedIn via a daily GitHub Action.",
+  "scripts": {
+    "preview": "python3 -m http.server 3000 --directory public"
+  }
+}

@@ -1,0 +1,49 @@
+name: Sync LinkedIn
+
+# Daily at 06:00 UTC, plus on-demand via the Actions tab.
+# Frequency is intentionally low — LinkedIn flags chatty automated logins.
+on:
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+
+# Required so the workflow can push the regenerated data.js back to the repo.
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-linkedin
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install linkedin-api
+        run: pip install --quiet linkedin-api
+
+      - name: Sync profile + posts
+        env:
+          LINKEDIN_EMAIL: ${{ secrets.LINKEDIN_EMAIL }}
+          LINKEDIN_PASSWORD: ${{ secrets.LINKEDIN_PASSWORD }}
+          LINKEDIN_PROFILE_PUBLIC_ID: ${{ secrets.LINKEDIN_PROFILE_PUBLIC_ID }}
+        run: python scripts/sync_linkedin.py
+
+      - name: Commit & push if changed
+        run: |
+          if git diff --quiet -- public/data.js; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/data.js
+          git commit -m "chore(sync): refresh profile from LinkedIn"
+          git push

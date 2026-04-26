@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(mkdir -p /tmp/design-extract)",
+      "Read(//tmp/**)",
+      "Bash(cp /home/sponky/.claude/projects/-home-sponky-Documents-claude-code-portofolio-landing/51118476-7616-492a-bd55-69f52df46e8d/tool-results/webfetch-1777173132299-li0ea8.bin design.gz)",
+      "Bash(gunzip -k design.gz)",
+      "Bash(tar -tf design)",
+      "Bash(tar -xf design)",
+      "Bash(cp \"/tmp/design-extract/personal-website-real-time-update/project/styles.css\" \"/home/sponky/Documents/claude-code/portofolio-landing/public/styles.css\")",
+      "Bash(cp \"/tmp/design-extract/personal-website-real-time-update/project/components.jsx\" \"/home/sponky/Documents/claude-code/portofolio-landing/public/components.jsx\")",
+      "Bash(cp \"/tmp/design-extract/personal-website-real-time-update/project/tweaks-panel.jsx\" \"/home/sponky/Documents/claude-code/portofolio-landing/public/tweaks-panel.jsx\")",
+      "Bash(python3 -c \"import ast; ast.parse\\(open\\('scripts/sync_linkedin.py'\\).read\\(\\)\\); print\\('python OK'\\)\")",
+      "Bash(python3 -c \"import yaml; yaml.safe_load\\(open\\('.github/workflows/sync-linkedin.yml'\\)\\); print\\('yaml OK'\\)\")",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(python3)",
+      "Bash(node --check public/data.js)",
+      "Bash(python3 -c \"import json,re; raw=open\\('public/data.js'\\).read\\(\\); m=re.search\\(r'window\\\\.PROFILE_DATA\\\\s*=\\\\s*\\(\\\\{.*\\\\}\\)\\\\s*;', raw, re.DOTALL\\); d=json.loads\\(m.group\\(1\\)\\); print\\('parsed OK,', len\\(d\\), 'top-level keys'\\); print\\(' headline:', d['headline']\\); print\\(' projects:', [p['title'] for p in d['projects']]\\); print\\(' education:', [e['school'] for e in d['education']]\\); print\\(' tech cats:', [c['category'] for c in d['techStack']]\\); print\\(' updates:', len\\(d['updates']\\), 'posts'\\)\")"
+    ]
+  }
+}
